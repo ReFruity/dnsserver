@@ -2,24 +2,30 @@ import socket
 from dnspacket import DnsPacket
 from dnscache import Cache
 import sys
+import argparse
 
 def main():
     debug = False
-    forwarder = "8.8.8.8"
-    port = 53
 
-    sys.argv.pop(0)
-    if sys.argv:
-        forwarder = sys.argv.pop(0)
+    argparser = argparse.ArgumentParser(description='Caching DNS Server')
+    argparser.add_argument('-f','--forwarder', help='specifies forwarder',
+                           required=False, default='8.8.8.8')
+    argparser.add_argument('-p','--port', help='specifies port to bind this server too',
+                           required=False, default='53')
+    args = argparser.parse_args()
+
+    forwarder = args.forwarder
+    forwport = 53
+    serverport = int(args.port)
 
     querysocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     querysocket.settimeout(3)
 
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    serversocket.bind(("0.0.0.0", 53))
+    serversocket.bind(("0.0.0.0", serverport))
     serversocket.settimeout(1)
-    print("DNS server bound to 127.0.0.1, port 53\n")
+    print("DNS server bound to 0.0.0.0, port", serverport, "\n")
 
     cache = Cache("cache.txt")
     cache.read()
@@ -44,7 +50,7 @@ def main():
                     answer = anspack.bytes
                 else:
                     print("No answer in cache, asking forwarder...\n")
-                    querysocket.connect((forwarder, port))
+                    querysocket.connect((forwarder, forwport))
                     querysocket.send(query)
                     answer = querysocket.recv(1024)
                     anspack = DnsPacket(answer)

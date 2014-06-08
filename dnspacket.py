@@ -17,7 +17,7 @@ class DnsPacket:
         self.answers = [dict() for _ in range(self.ancount + self.nscount + self.arcount)]
         pointer = 12
 
-        # question and answer section
+        # question and answer sections
         for i in range(0, self.qdcount):
             name, nameraw = parsename(bytes, pointer)
             length = len(nameraw)
